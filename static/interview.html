@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HireAI — Interview Room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="/static/css/style.css?v=5" />
+  <style>
+    /* Interview-page specific overrides */
+    .setup-card .btn { width: 100%; justify-content: center; margin-top: 10px; }
+    .perm-item.granted { border-color: rgba(16,217,160,0.2); }
+
+    /* HTTPS warning card */
+    #https-warning {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(255,87,87,0.08) 0%, transparent 60%);
+    }
+    .https-card {
+      background: #0b1020;
+      border: 1px solid rgba(255,87,87,0.2);
+      border-radius: 20px;
+      padding: 44px 40px;
+      width: 480px;
+      max-width: 95vw;
+      text-align: center;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,87,87,0.1);
+      animation: cardIn 0.6s cubic-bezier(0.16,1,0.3,1);
+    }
+    .https-icon {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: rgba(255,87,87,0.1);
+      border: 1px solid rgba(255,87,87,0.25);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 1.8rem;
+      box-shadow: 0 0 28px rgba(255,87,87,0.2);
+    }
+    .https-card h2 { font-size: 1.4rem; font-weight: 700; color: #e4ecf7; margin: 0 0 12px; letter-spacing: -0.4px; }
+    .https-card p  { font-size: 0.88rem; color: #8899b4; line-height: 1.7; margin: 0 0 10px; }
+    .https-detail  {
+      background: rgba(255,87,87,0.07);
+      border: 1px solid rgba(255,87,87,0.15);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin: 20px 0;
+      font-size: 0.82rem;
+      color: #ff9090;
+      text-align: left;
+      line-height: 1.7;
+    }
+    .https-detail code {
+      background: rgba(255,87,87,0.15);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+    .interview-brand {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .interview-brand-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #5b7cfa, #a78bfa);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+      box-shadow: 0 8px 24px rgba(91,124,250,0.4);
+    }
+    .interview-brand h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #e4ecf7;
+      margin: 0 0 6px;
+      letter-spacing: -0.4px;
+    }
+    .interview-brand p {
+      font-size: 0.84rem;
+      color: #8899b4;
+      margin: 0;
+    }
+    .perm-section-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #445566;
+      margin-bottom: 10px;
+    }
+    .ai-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      background: #0b1020;
+      border-bottom: 1px solid rgba(148,163,184,0.07);
+    }
+    .ai-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #3b5cdb, #5b7cfa);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .ai-info h4 { font-size: 0.88rem; font-weight: 600; color: #e4ecf7; margin: 0; }
+    .ai-info p { font-size: 0.74rem; color: #8899b4; margin: 0; }
+    .ai-live { display: flex; align-items: center; gap: 5px; margin-left: auto; font-size: 0.74rem; color: #10d9a0; }
+    .ai-live-dot { width: 6px; height: 6px; border-radius: 50%; background: #10d9a0; animation: pulseDot 1.5s ease infinite; }
+  </style>
+</head>
+<body class="interview-page">
+
+<!-- ── HTTPS Warning (shown when on HTTP from non-localhost) ─────────────── -->
+<div id="https-warning">
+  <div class="https-card">
+    <div class="https-icon">🔒</div>
+    <h2>Secure Connection Required</h2>
+    <p>
+      Your browser requires <strong style="color:#e4ecf7">HTTPS</strong> to access the camera,
+      microphone, and screen sharing — all of which are required for this interview.
+    </p>
+    <div class="https-detail">
+      <strong>What happened:</strong> You're accessing this page over an insecure <code>http://</code>
+      connection. Chrome and Firefox block media permissions on non-secure origins.<br><br>
+      <strong>What to do:</strong> Please use the exact link from your invitation email —
+      it should start with <code>https://</code>. If you're still having issues, contact the
+      recruiter who sent you the invitation.
+    </div>
+    <p style="font-size:0.8rem;color:#445566">
+      Current origin: <span id="current-origin" style="color:#8899b4"></span>
+    </p>
+  </div>
+</div>
+
+<!-- ── Setup Screen ──────────────────────────────────────────────────────── -->
+<div id="setup-screen" class="setup-screen">
+  <div class="setup-card">
+    <div class="interview-brand">
+      <div class="interview-brand-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h1>HireAI Interview Room</h1>
+      <p>Enable permissions below to begin your interview</p>
+    </div>
+
+    <div class="perm-section-label">Required Permissions</div>
+    <div class="permission-checks">
+      <div class="perm-item" id="perm-camera">
+        <span class="perm-icon">📷</span>
+        <span class="perm-label">Camera</span>
+        <span class="perm-status" id="status-camera">Not enabled</span>
+      </div>
+      <div class="perm-item" id="perm-mic">
+        <span class="perm-icon">🎙️</span>
+        <span class="perm-label">Microphone</span>
+        <span class="perm-status" id="status-mic">Not enabled</span>
+      </div>
+      <div class="perm-item" id="perm-screen">
+        <span class="perm-icon">🖥️</span>
+        <span class="perm-label">Screen Share</span>
+        <span class="perm-status" id="status-screen">Not enabled</span>
+      </div>
+    </div>
+
+    <div class="camera-preview" style="height:150px;max-height:150px;overflow:hidden;border-radius:12px;background:#04080f;margin-bottom:18px">
+      <video id="camera-preview" autoplay muted playsinline style="width:100%;height:150px;max-height:150px;object-fit:cover;display:block"></video>
+    </div>
+
+    <button id="grant-btn" onclick="requestPermissions()"
+      style="width:100%;padding:14px;margin-top:10px;background:linear-gradient(135deg,#5b7cfa,#7b6cf5);color:#fff;font-size:0.95rem;font-weight:600;border:none;border-radius:12px;cursor:pointer;letter-spacing:0.01em">
+      Enable Camera, Mic &amp; Screen Share
+    </button>
+
+    <!-- Shown after permissions granted -->
+    <div id="ready-section" style="display:none;margin-top:14px">
+
+      <!-- Voice toggle -->
+      <div id="voice-toggle-card" onclick="onVoiceToggle()"
+        style="display:flex;align-items:center;justify-content:space-between;gap:14px;background:#0d1426;border:1px solid rgba(148,163,184,0.15);border-radius:12px;padding:14px 16px;cursor:pointer;margin-bottom:12px;user-select:none">
+        <div>
+          <div style="font-size:0.88rem;font-weight:600;color:#e4ecf7">🎙️ Voice Interview Mode</div>
+          <div style="font-size:0.74rem;color:#8899b4;margin-top:2px">AI speaks questions · You answer by voice</div>
+        </div>
+        <div id="voice-toggle-pill"
+          style="width:44px;height:24px;border-radius:99px;background:#1b2540;border:1px solid rgba(148,163,184,0.15);position:relative;transition:background 0.2s;flex-shrink:0">
+          <div id="voice-toggle-dot"
+            style="width:18px;height:18px;border-radius:50%;background:#8899b4;position:absolute;top:50%;left:3px;transform:translateY(-50%);transition:left 0.2s,background 0.2s"></div>
+        </div>
+      </div>
+
+      <!-- START button — big and impossible to miss -->
+      <button id="start-btn" onclick="startInterview()"
+        style="display:block;width:100%;padding:16px;background:linear-gradient(135deg,#10d9a0,#0fb882);color:#04080f;font-size:1rem;font-weight:700;border:none;border-radius:12px;cursor:pointer;letter-spacing:0.02em;box-shadow:0 6px 24px rgba(16,217,160,0.35)">
+        Start Interview →
+      </button>
+
+    </div>
+
+    <p style="font-size:0.76rem;color:#445566;text-align:center;margin-top:14px;line-height:1.6">
+      Camera, microphone, and screen sharing are required to maintain interview integrity.
+    </p>
+  </div>
+</div>
+
+<!-- ── Interview Screen ──────────────────────────────────────────────────── -->
+<div id="interview-screen" style="display:none" class="interview-screen">
+
+  <div class="interview-sidebar" style="width:220px;min-width:220px;max-width:220px;flex-shrink:0">
+    <div class="sidebar-video" style="overflow:hidden;border-radius:10px;background:#04080f">
+      <video id="interview-camera" autoplay muted playsinline style="width:100%;max-width:220px;aspect-ratio:4/3;object-fit:cover;display:block"></video>
+      <div class="video-label">You</div>
+    </div>
+
+    <div class="timer-box">
+      <div class="timer-label">Time Remaining</div>
+      <div id="timer-display" class="timer-value">10:00</div>
+    </div>
+
+    <div class="question-progress">
+      <div class="progress-label" id="progress-text">Question 0 of 0</div>
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="interview-main">
+    <div class="ai-header">
+      <div class="ai-avatar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="ai-info">
+        <h4>AI Interviewer</h4>
+        <p>Powered by HireAI</p>
+      </div>
+      <div class="ai-live">
+        <div class="ai-live-dot"></div>
+        Live
+      </div>
+    </div>
+
+    <div id="chat-box" class="chat-box"></div>
+
+    <div class="chat-input-area" id="input-area" style="display:none">
+      <textarea
+        id="answer-input"
+        class="answer-input"
+        placeholder="Type your answer here… (Enter to send, Shift+Enter for new line)"
+        rows="3"
+        onkeydown="handleKeyDown(event)"
+      ></textarea>
+      <button class="send-btn" onclick="sendAnswer()" id="send-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <line x1="22" y1="2" x2="11" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <polygon points="22 2 15 22 11 13 2 9 22 2" stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Voice controls (voice mode only) -->
+    <div id="voice-area" style="display:none" class="voice-controls-panel">
+      <!-- AI speaking indicator -->
+      <div id="ai-speaking" style="display:none" class="ai-speaking-indicator">
+        <div class="wave-bars">
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+        </div>
+        <span style="font-size:0.82rem;color:#8899b4">AI is speaking…</span>
+      </div>
+
+      <!-- Transcript box -->
+      <div id="voice-transcript" class="voice-transcript" style="display:none">
+        <span id="transcript-text" class="transcript-text"></span>
+        <span id="interim-text" class="interim-text"></span>
+      </div>
+
+      <!-- Mic button -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+        <div class="mic-btn-wrap">
+          <div class="mic-ring mic-ring-1" id="mic-ring-1"></div>
+          <div class="mic-ring mic-ring-2" id="mic-ring-2"></div>
+          <button class="mic-btn" id="mic-btn" onclick="toggleRecording()">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+              <rect x="9" y="2" width="6" height="11" rx="3" stroke="white" stroke-width="2"/>
+              <path d="M5 11a7 7 0 0 0 14 0" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <line x1="12" y1="18" x2="12" y2="22" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <line x1="8" y1="22" x2="16" y2="22" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+        <div id="mic-status-label" style="font-size:0.78rem;color:#8899b4">Tap to answer</div>
+      </div>
+
+      <!-- Send voice answer button -->
+      <button id="voice-send-btn" class="btn btn-primary" style="display:none;margin-top:6px" onclick="sendVoiceAnswer()">
+        Send Answer →
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Done Screen ───────────────────────────────────────────────────────── -->
+<div id="done-screen" style="display:none" class="done-screen">
+  <div class="done-card">
+    <div class="done-icon">✓</div>
+    <h2>Interview Complete</h2>
+    <p>Thank you for completing your interview. Our team will carefully review your responses and reach out regarding the outcome.</p>
+    <p class="done-note">You may now close this window.</p>
+  </div>
+</div>
+
+<script src="/static/js/interview.js"></script>
+<script>
+  // Detect insecure context — camera/mic/screen won't work on HTTP from non-localhost
+  (function() {
+    const isLocalhost = ['localhost', '127.0.0.1', '::1'].includes(location.hostname);
+    const isHttps = location.protocol === 'https:';
+    if (!isLocalhost && !isHttps) {
+      document.getElementById('https-warning').style.display = 'flex';
+      document.getElementById('setup-screen').style.display  = 'none';
+      document.getElementById('current-origin').textContent   = location.origin;
+    }
+  })();
+</script>
+</body>
+</html>

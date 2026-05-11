@@ -1,0 +1,32 @@
+# Secrets
+.env
+
+# Database & generated files
+*.db
+*.db-shm
+*.db-wal
+audit.jsonl
+chroma_db/
+
+# SSL certs (auto-generated on first run)
+ssl_cert.pem
+ssl_key.pem
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/

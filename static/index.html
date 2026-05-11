@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HireAI — Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="/static/css/style.css?v=5" />
+</head>
+<body class="admin-page">
+
+<div class="app">
+
+  <!-- ─── Sidebar ──────────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="brand-text">HireAI</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <span class="nav-label">Navigation</span>
+
+        <button class="nav-item active" data-tab="overview">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.75"/>
+            <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.75"/>
+            <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.75"/>
+            <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.75"/>
+          </svg>
+          Overview
+        </button>
+
+        <button class="nav-item" data-tab="jd">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+            <rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.75"/>
+            <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" stroke="currentColor" stroke-width="1.75"/>
+            <line x1="12" y1="12" x2="12" y2="16" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+            <line x1="10" y1="14" x2="14" y2="14" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+          </svg>
+          Job Descriptions
+        </button>
+
+        <button class="nav-item" data-tab="candidates">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.75"/>
+            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.75"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="currentColor" stroke-width="1.75"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.75"/>
+          </svg>
+          Candidates
+        </button>
+
+        <button class="nav-item" data-tab="decisions">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="currentColor" stroke-width="1.75"/>
+            <polyline points="22 4 12 14.01 9 11.01" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Decisions
+          <span class="nav-badge" id="decisions-count" style="display:none">0</span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="status-dot"></div>
+      <span>System Online</span>
+    </div>
+  </aside>
+
+  <!-- ─── Main ─────────────────────────────────────────────────────────────── -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-title" id="page-title">Overview</div>
+      <div class="topbar-actions" id="topbar-actions"></div>
+    </header>
+
+    <div class="content">
+
+      <!-- ── Overview ─────────────────────────────────────────────────────── -->
+      <section id="tab-overview" class="tab-panel active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-blue">
+              <svg viewBox="0 0 24 24" fill="none">
+                <rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.75"/>
+                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" stroke="currentColor" stroke-width="1.75"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-jd-count">—</div>
+              <div class="stat-label">Job Descriptions</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-violet">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.75"/>
+                <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.75"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-candidate-count">—</div>
+              <div class="stat-label">Total Candidates</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-green">
+              <svg viewBox="0 0 24 24" fill="none">
+                <polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-shortlisted-count">—</div>
+              <div class="stat-label">Shortlisted</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-amber">
+              <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.75"/>
+                <polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="stat-info">
+              <div class="stat-value" id="stat-pending-count">—</div>
+              <div class="stat-label">Pending Decisions</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="overview-grid">
+          <div class="overview-panel">
+            <div class="panel-hd">
+              <span>Recent Job Descriptions</span>
+              <button class="btn btn-ghost btn-sm" onclick="switchTab('jd')">View all →</button>
+            </div>
+            <div id="overview-jds" class="overview-list">
+              <div style="padding:10px 20px"><div class="skeleton-row"></div></div>
+              <div style="padding:10px 20px"><div class="skeleton-row"></div></div>
+              <div style="padding:10px 20px"><div class="skeleton-row"></div></div>
+            </div>
+          </div>
+          <div class="overview-panel">
+            <div class="panel-hd">
+              <span>Recent Candidates</span>
+              <button class="btn btn-ghost btn-sm" onclick="switchTab('candidates')">View all →</button>
+            </div>
+            <div id="overview-candidates" class="overview-list">
+              <div style="padding:10px 20px"><div class="skeleton-row"></div></div>
+              <div style="padding:10px 20px"><div class="skeleton-row"></div></div>
+              <div style="padding:10px 20px"><div class="skeleton-row"></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Job Descriptions ──────────────────────────────────────────────── -->
+      <section id="tab-jd" class="tab-panel">
+        <div id="jd-list" class="card-grid">
+          <div class="card" style="pointer-events:none">
+            <div class="skeleton-row" style="height:18px;width:60%;margin-bottom:10px"></div>
+            <div class="skeleton-row" style="height:12px;width:40%"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Candidates ────────────────────────────────────────────────────── -->
+      <section id="tab-candidates" class="tab-panel">
+        <div class="table-toolbar">
+          <div class="toolbar-left">
+            <select id="jd-filter" class="select" style="width:220px" onchange="loadCandidates()">
+              <option value="">All Job Descriptions</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="candidates-table">
+            <thead>
+              <tr>
+                <th>Candidate</th>
+                <th>Job Description</th>
+                <th>Score</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="candidates-body">
+              <tr><td colspan="5" class="loading">Loading candidates…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── Decisions ─────────────────────────────────────────────────────── -->
+      <section id="tab-decisions" class="tab-panel">
+        <div id="decisions-list">
+          <p class="loading">Loading decisions…</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- ─── JD Upload Modal ───────────────────────────────────────────────────── -->
+<div id="jd-modal" class="modal-overlay" style="display:none">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>New Job Description</h3>
+      <button class="modal-close" onclick="hideModal('jd-modal')">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div style="padding:20px 24px 0">
+      <label class="form-label">
+        <span class="form-label-text">Job Title</span>
+        <input id="jd-title" type="text" class="form-input" placeholder="e.g. Senior Backend Engineer" />
+      </label>
+      <div class="upload-tabs">
+        <button class="upload-tab active" onclick="switchJDTab('file',this)">Upload File</button>
+        <button class="upload-tab" onclick="switchJDTab('text',this)">Paste Text</button>
+      </div>
+      <div id="jd-file-section">
+        <label class="file-drop-zone" id="jd-drop-zone"
+          ondragover="onDragOver(event)"
+          ondragleave="onDragLeave(event,'jd-drop-zone')"
+          ondrop="onDrop(event,'jd-file')">
+          <input type="file" id="jd-file" accept=".pdf,.docx,.txt" style="display:none"
+            onchange="onFileSelect(this,'jd-drop-zone','jd-file-name')" />
+          <div class="drop-icon">
+            <svg viewBox="0 0 24 24" fill="none" width="30" height="30">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="1.75"/>
+              <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="1.75"/>
+              <line x1="12" y1="18" x2="12" y2="12" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+              <line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span id="jd-file-name">Drag & drop or <u>browse</u></span>
+          <span class="drop-hint">PDF, DOCX, TXT supported</span>
+        </label>
+      </div>
+      <div id="jd-text-section" style="display:none">
+        <label class="form-label">
+          <span class="form-label-text">Job Description Text</span>
+          <textarea id="jd-text" class="form-textarea" rows="9" placeholder="Paste the full job description here…"></textarea>
+        </label>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="hideModal('jd-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitJD()">Submit JD</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Resume Upload Modal ──────────────────────────────────────────────── -->
+<div id="resume-modal" class="modal-overlay" style="display:none">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Upload Candidate Resume</h3>
+      <button class="modal-close" onclick="hideModal('resume-modal')">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div style="padding:20px 24px 0">
+      <label class="form-label">
+        <span class="form-label-text">Job Description</span>
+        <select id="resume-jd-id" class="form-input">
+          <option value="">Select a job description…</option>
+        </select>
+      </label>
+      <div class="form-row">
+        <label class="form-label">
+          <span class="form-label-text">Full Name</span>
+          <input id="resume-name" type="text" class="form-input" placeholder="Jane Doe" />
+        </label>
+        <label class="form-label">
+          <span class="form-label-text">Email Address</span>
+          <input id="resume-email" type="email" class="form-input" placeholder="jane@example.com" />
+        </label>
+      </div>
+      <div class="upload-tabs">
+        <button class="upload-tab active" onclick="switchResumeTab('file',this)">Upload File</button>
+        <button class="upload-tab" onclick="switchResumeTab('text',this)">Paste Text</button>
+      </div>
+      <div id="resume-file-section">
+        <label class="file-drop-zone" id="resume-drop-zone"
+          ondragover="onDragOver(event)"
+          ondragleave="onDragLeave(event,'resume-drop-zone')"
+          ondrop="onDrop(event,'resume-file')">
+          <input type="file" id="resume-file" accept=".pdf,.docx,.txt" style="display:none"
+            onchange="onFileSelect(this,'resume-drop-zone','resume-file-name')" />
+          <div class="drop-icon">
+            <svg viewBox="0 0 24 24" fill="none" width="30" height="30">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="1.75"/>
+              <polyline points="14 2 14 8 20 8" stroke="currentColor" stroke-width="1.75"/>
+              <line x1="12" y1="18" x2="12" y2="12" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+              <line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span id="resume-file-name">Drag & drop or <u>browse</u></span>
+          <span class="drop-hint">PDF, DOCX, TXT supported</span>
+        </label>
+      </div>
+      <div id="resume-text-section" style="display:none">
+        <label class="form-label">
+          <span class="form-label-text">Resume Text</span>
+          <textarea id="resume-text" class="form-textarea" rows="9" placeholder="Paste resume text here…"></textarea>
+        </label>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="hideModal('resume-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitResume()">Screen Candidate</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Candidate Detail Modal ──────────────────────────────────────────── -->
+<div id="detail-modal" class="modal-overlay" style="display:none">
+  <div class="modal modal-wide" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="detail-title">Candidate Details</h3>
+      <button class="modal-close" onclick="hideModal('detail-modal')">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div id="detail-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="hideModal('detail-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Toast ────────────────────────────────────────────────────────────── -->
+<div id="toast" class="toast" style="display:none"></div>
+
+<script src="/static/js/admin.js"></script>
+</body>
+</html>
