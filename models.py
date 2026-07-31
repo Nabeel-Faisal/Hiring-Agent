@@ -130,6 +130,7 @@ class ResumeUploadRequest(BaseModel):
     candidate_name: str
     candidate_email: str
     resume_text: str
+    phone: str = ""
 
 
 class AdminDecisionRequest(BaseModel):

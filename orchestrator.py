@@ -77,8 +77,8 @@ async def schedule_interview(candidate_id: str) -> str:
     candidate = await db.get_candidate(candidate_id)
     if not candidate:
         raise ValueError(f"Candidate not found: {candidate_id}")
-    if candidate["status"] != "shortlisted":
-        raise ValueError(f"Candidate is not shortlisted: {candidate_id}")
+    if candidate.get("screening_score") is None:
+        raise ValueError(f"Candidate has not been screened yet: {candidate_id}")
 
     # Generate unique meeting token
     token = secrets.token_urlsafe(32)

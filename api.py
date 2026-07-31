@@ -41,6 +41,16 @@ async def serve_admin():
     return (STATIC_DIR / "index.html").read_text()
 
 
+@app.get("/jobs", response_class=HTMLResponse)
+async def serve_jobs_list():
+    return (STATIC_DIR / "jobs.html").read_text()
+
+
+@app.get("/jobs/{jd_id}", response_class=HTMLResponse)
+async def serve_job_detail(jd_id: str):
+    return (STATIC_DIR / "job-detail.html").read_text()
+
+
 @app.get("/interview/{token}", response_class=HTMLResponse)
 async def serve_interview_room(token: str):
     candidate = await db.get_candidate_by_token(token)
@@ -90,6 +100,16 @@ async def delete_jd(jd_id: str):
     return {"message": "Job description and all related candidates deleted"}
 
 
+@app.post("/api/jd/{jd_id}/publish")
+async def publish_jd(jd_id: str, body: dict):
+    jd_row = await db.get_jd(jd_id)
+    if not jd_row:
+        raise HTTPException(404, "JD not found")
+    published = bool(body.get("published"))
+    await db.set_jd_published(jd_id, published)
+    return {"message": "Published" if published else "Unpublished"}
+
+
 @app.post("/api/jd/upload")
 async def upload_jd_file(
     title: str = Form(...),
@@ -115,10 +135,9 @@ async def upload_resume(body: ResumeUploadRequest):
     if not jd_row:
         raise HTTPException(404, "JD not found")
     candidate_id = await db.create_candidate(
-        body.candidate_name, body.candidate_email, body.resume_text, body.jd_id
+        body.candidate_name, body.candidate_email, body.resume_text, body.jd_id, body.phone
     )
-    asyncio.create_task(_bg_screen(candidate_id))
-    return {"candidate_id": candidate_id, "message": "Resume received — screening in background"}
+    return {"candidate_id": candidate_id, "message": "Application received — send to screening when ready"}
 
 
 @app.post("/api/resume/upload")
@@ -126,6 +145,7 @@ async def upload_resume_file(
     jd_id: str = Form(...),
     candidate_name: str = Form(...),
     candidate_email: str = Form(...),
+    phone: str = Form(""),
     file: UploadFile = File(...)
 ):
     jd_row = await db.get_jd(jd_id)
@@ -138,16 +158,26 @@ async def upload_resume_file(
         raise HTTPException(400, str(e))
     if not resume_text.strip():
         raise HTTPException(400, "Could not extract text from the resume file.")
-    candidate_id = await db.create_candidate(candidate_name, candidate_email, resume_text, jd_id)
-    asyncio.create_task(_bg_screen(candidate_id))
-    return {"candidate_id": candidate_id, "message": "Resume received — screening in background"}
+    candidate_id = await db.create_candidate(candidate_name, candidate_email, resume_text, jd_id, phone)
+    return {"candidate_id": candidate_id, "message": "Application received — send to screening when ready"}
+
+
+@app.post("/api/candidates/screen")
+async def bulk_send_to_screening(body: dict):
+    candidate_ids = body.get("candidate_ids") or []
+    queued = 0
+    for cid in candidate_ids:
+        candidate = await db.get_candidate(cid)
+        if not candidate or candidate["status"] != "pending":
+            continue
+        asyncio.create_task(_bg_screen(cid))
+        queued += 1
+    return {"queued": queued, "message": f"{queued} candidate(s) sent to screening"}
 
 
 async def _bg_screen(candidate_id: str):
     try:
-        result = await orchestrator.process_candidate_screening(candidate_id)
-        if result.shortlisted:
-            await orchestrator.schedule_interview(candidate_id)
+        await orchestrator.process_candidate_screening(candidate_id)
     except Exception as e:
         import audit
         await audit.log_event("screening_error", {"candidate_id": candidate_id, "error": str(e)})
@@ -181,6 +211,43 @@ async def get_candidate(candidate_id: str):
     return {**row, "evaluation": evaluation, "decision": decision}
 
 
+# ─── Public careers site ────────────────────────────────────────────────────────
+
+@app.get("/api/public/jobs")
+async def public_list_jobs():
+    return await db.list_published_jds()
+
+
+@app.get("/api/public/jobs/{jd_id}")
+async def public_get_job(jd_id: str):
+    jd_row = await db.get_jd(jd_id)
+    if not jd_row or not jd_row.get("is_published"):
+        raise HTTPException(404, "This job is not currently accepting applications")
+    return jd_row
+
+
+@app.post("/api/public/apply")
+async def public_apply(
+    jd_id: str = Form(...),
+    name: str = Form(...),
+    email: str = Form(...),
+    phone: str = Form(""),
+    file: UploadFile = File(...)
+):
+    jd_row = await db.get_jd(jd_id)
+    if not jd_row or not jd_row.get("is_published"):
+        raise HTTPException(404, "This job is not currently accepting applications")
+    content = await file.read()
+    try:
+        resume_text = file_parser.extract_text(file.filename, content)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    if not resume_text.strip():
+        raise HTTPException(400, "Could not extract text from the resume file.")
+    candidate_id = await db.create_candidate(name, email, resume_text, jd_id, phone)
+    return {"candidate_id": candidate_id, "message": "Application received"}
+
+
 # ─── Interview scheduling ───────────────────────────────────────────────────────
 
 @app.post("/api/candidates/{candidate_id}/schedule")
@@ -188,8 +255,8 @@ async def schedule_interview(candidate_id: str):
     candidate = await db.get_candidate(candidate_id)
     if not candidate:
         raise HTTPException(404, "Candidate not found")
-    if candidate["status"] != "shortlisted":
-        raise HTTPException(400, f"Candidate status is '{candidate['status']}' — must be 'shortlisted'")
+    if candidate.get("screening_score") is None:
+        raise HTTPException(400, "Candidate has not been screened yet")
     token = await orchestrator.schedule_interview(candidate_id)
     return {"token": token, "message": "Interview scheduled and invitation sent"}
 

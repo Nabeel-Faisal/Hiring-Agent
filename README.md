@@ -8,12 +8,14 @@ Built with **FastAPI**, **Groq (Llama 3.3 70B)**, and a fully custom dark-theme 
 
 ## Features
 
-- **Resume Screening** — Upload a job description and candidate resumes; AI scores and ranks each candidate automatically
+- **Public Careers Page** — Candidates browse open positions at `/jobs`, read the full JD, and apply themselves with name, email, phone, and resume — no HR data entry required
+- **Staged Hiring Pipeline** — Applications land unscreened; HR explicitly moves each candidate through Applications → Screening → Interview → Decision, with a human checkpoint at every stage
+- **Resume Screening** — AI scores and ranks each candidate against the job description on demand (bulk "Send to Screening" from the dashboard)
 - **AI Interview System** — Generates unique, difficulty-progressed questions per candidate and conducts them via a real-time chat or voice interface
 - **Voice Interview Mode** — AI speaks questions aloud via browser TTS; candidate answers by microphone with live speech-to-text transcription
 - **Screen + Camera Monitoring** — Requires camera, microphone, and screen sharing to maintain interview integrity
 - **Automated Emails** — Sends professional HTML interview invitations, selection, and rejection emails via Gmail SMTP
-- **Admin Dashboard** — Full sidebar-based dark dashboard to manage job descriptions, view candidates, review scores, and trigger hiring decisions
+- **Admin Dashboard** — Full sidebar-based dark dashboard covering Job Descriptions (with Publish/Draft control), Applications, Screening, Interview, and Decisions
 - **Decision Engine** — AI evaluates interview answers and scores candidates; admin reviews and sends final hire/reject emails in one click
 - **Unique Questions Per Candidate** — Every interview session generates a fresh, personalized question set with a random seed — no repeated questions even for the same role
 - **Question Difficulty Progression** — Q1–Q2 easy warmup, Q3–Q4 medium, Q5 hard deep-dive
@@ -49,10 +51,15 @@ interview_system/
 │   └── feedback_loop.py     # Feedback and improvement loop
 ├── static/
 │   ├── index.html           # Admin dashboard
+│   ├── jobs.html             # Public careers page — list of open positions
+│   ├── job-detail.html       # Public JD page + apply form
 │   ├── interview.html       # Candidate interview room
-│   ├── css/style.css        # Full dark design system
+│   ├── css/
+│   │   ├── style.css         # Full dark design system (shared)
+│   │   └── public.css        # Careers page layout
 │   └── js/
 │       ├── admin.js         # Dashboard logic
+│       ├── public.js         # Careers page + apply form logic
 │       └── interview.js     # Interview + voice mode logic
 ├── api.py                   # FastAPI routes and WebSocket handler
 ├── database.py              # SQLite models and queries
@@ -137,21 +144,23 @@ An SSL certificate is auto-generated on first run. Candidates will see a browser
 ### Admin Workflow
 
 1. Open **http://localhost:8000** in your browser
-2. Go to **Job Descriptions** → paste a JD and click Parse
-3. Go to **Candidates** → upload resumes for that JD
-4. The AI screener automatically scores and ranks candidates
-5. Shortlisted candidates receive an interview invitation email automatically
-6. Monitor interviews in real time from the Candidates tab
-7. Go to **Decisions** → review AI evaluation scores → click Hire or Reject to send the final email
+2. Go to **Job Descriptions** → paste a JD, let it parse, then click **Publish** to make it visible on the public careers page (new JDs start as Draft)
+3. Candidates apply themselves via `/jobs` (see Candidate Workflow below) — or add one manually from the **Applications** tab
+4. Go to **Applications** → select candidates with the checkboxes → **Send to Screening**
+5. Go to **Screening** → review the AI score for each candidate → click **Send Interview Invite** (available for every screened candidate, pass or fail — the AI score is guidance, the call is always yours)
+6. Go to **Interview** → track Pending / Complete status; open a candidate's details to see their evaluation once complete
+7. Go to **Decisions** → review AI evaluation scores → click Select or Reject to send the final email
 
 ### Candidate Workflow
 
-1. Candidate receives invitation email with a unique HTTPS link
-2. Opens link → grants camera, microphone, and screen share permissions
-3. Optionally enables **Voice Interview Mode** (AI speaks, candidate answers by voice)
-4. Clicks **Start Interview →**
-5. Answers 5 questions (2 easy → 2 medium → 1 hard) within the time limit
-6. Receives selection or rejection email after admin decision
+1. Candidate visits `/jobs`, browses open positions, and opens one to read the full description
+2. Clicks **Apply for this role** (available at the top and bottom of the JD) → fills in name, email, phone, and uploads a resume
+3. Receives an interview invitation email once HR screens and approves the application, with a unique HTTPS link
+4. Opens link → grants camera, microphone, and screen share permissions
+5. Optionally enables **Voice Interview Mode** (AI speaks, candidate answers by voice)
+6. Clicks **Start Interview →**
+7. Answers 5 questions (2 easy → 2 medium → 1 hard) within the time limit
+8. Receives selection or rejection email after admin decision
 
 ---
 
@@ -197,7 +206,7 @@ Questions are generated fresh for every candidate session using a random session
 | `HOST` | Server bind address | `0.0.0.0` |
 | `PORT` | HTTP port (admin) | `8000` |
 | `BASE_URL` | HTTPS URL for invite links | required |
-| `SCREENING_PASS_SCORE` | Min score to get interview invite | `60.0` |
+| `SCREENING_PASS_SCORE` | Score threshold for the Shortlisted/Rejected badge shown to HR (guidance only — HR can send an interview invite regardless) | `60.0` |
 | `INTERVIEW_DURATION_SECONDS` | Interview time limit | `600` |
 | `TOTAL_QUESTIONS` | Number of interview questions | `5` |
 | `DB_PATH` | SQLite database file | `interview_system.db` |

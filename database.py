@@ -26,6 +26,7 @@ async def init_db() -> None:
                 title TEXT NOT NULL,
                 raw_text TEXT NOT NULL,
                 parsed_json TEXT,
+                is_published INTEGER DEFAULT 0,
                 created_at TEXT DEFAULT (datetime('now'))
             );
 
@@ -33,6 +34,7 @@ async def init_db() -> None:
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
                 email TEXT NOT NULL,
+                phone TEXT DEFAULT '',
                 resume_text TEXT NOT NULL,
                 jd_id TEXT NOT NULL,
                 screening_score REAL,
@@ -90,6 +92,17 @@ async def init_db() -> None:
         """)
         await db.commit()
 
+        # Migrate pre-existing databases that predate these columns.
+        for stmt in (
+            "ALTER TABLE jd_sessions ADD COLUMN is_published INTEGER DEFAULT 0",
+            "ALTER TABLE candidates ADD COLUMN phone TEXT DEFAULT ''",
+        ):
+            try:
+                await db.execute(stmt)
+                await db.commit()
+            except aiosqlite.OperationalError:
+                pass  # column already exists
+
 
 # JD helpers
 async def create_jd(title: str, raw_text: str) -> str:
@@ -101,6 +114,25 @@ async def create_jd(title: str, raw_text: str) -> str:
         )
         await db.commit()
     return jd_id
+
+
+async def set_jd_published(jd_id: str, published: bool) -> None:
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "UPDATE jd_sessions SET is_published=? WHERE id=?",
+            (1 if published else 0, jd_id)
+        )
+        await db.commit()
+
+
+async def list_published_jds() -> list[dict]:
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute(
+            "SELECT * FROM jd_sessions WHERE is_published=1 ORDER BY created_at DESC"
+        ) as cur:
+            rows = await cur.fetchall()
+            return [dict(r) for r in rows]
 
 
 async def update_jd_parsed(jd_id: str, parsed_json: str) -> None:
@@ -129,12 +161,12 @@ async def list_jds() -> list[dict]:
 
 
 # Candidate helpers
-async def create_candidate(name: str, email: str, resume_text: str, jd_id: str) -> str:
+async def create_candidate(name: str, email: str, resume_text: str, jd_id: str, phone: str = "") -> str:
     cid = str(uuid.uuid4())
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute(
-            "INSERT INTO candidates (id, name, email, resume_text, jd_id) VALUES (?, ?, ?, ?, ?)",
-            (cid, name, email, resume_text, jd_id)
+            "INSERT INTO candidates (id, name, email, phone, resume_text, jd_id) VALUES (?, ?, ?, ?, ?, ?)",
+            (cid, name, email, phone, resume_text, jd_id)
         )
         await db.commit()
     return cid

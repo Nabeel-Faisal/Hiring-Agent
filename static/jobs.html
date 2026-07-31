@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Careers — Open Positions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"></noscript>
+  <link rel="stylesheet" href="/static/css/style.css?v=5" />
+  <link rel="stylesheet" href="/static/css/public.css?v=1" />
+</head>
+<body>
+
+<header class="public-header">
+  <div class="public-header-inner">
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="brand-text">Careers</span>
+    </div>
+  </div>
+</header>
+
+<main class="public-container">
+  <div class="public-hero">
+    <h1>Open Positions</h1>
+    <p>Explore our current openings and apply in minutes.</p>
+  </div>
+
+  <div id="job-list" class="job-grid">
+    <div class="job-card" style="pointer-events:none">
+      <div class="skeleton-row" style="height:18px;width:60%;margin-bottom:10px"></div>
+      <div class="skeleton-row" style="height:12px;width:40%"></div>
+    </div>
+  </div>
+</main>
+
+<script src="/static/js/public.js"></script>
+<script>
+  loadJobsList();
+</script>
+</body>
+</html>

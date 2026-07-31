@@ -60,17 +60,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ─── Tab switching ────────────────────────────────────────────────────────────
 const TAB_TITLES = {
-  overview:   'Overview',
-  jd:         'Job Descriptions',
-  candidates: 'Candidates',
-  decisions:  'Decisions',
+  overview:     'Overview',
+  jd:           'Job Descriptions',
+  applications: 'Applications',
+  screening:    'Screening',
+  interview:    'Interview',
+  decisions:    'Decisions',
 };
 
 const TAB_ACTIONS = {
-  overview:   '',
-  jd:         '<button class="btn btn-primary btn-sm" onclick="showModal(\'jd-modal\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="margin-right:2px"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>New JD</button>',
-  candidates: '<button class="btn btn-primary btn-sm" onclick="showModal(\'resume-modal\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="margin-right:2px"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>Upload Resume</button>',
-  decisions:  '<button class="btn btn-secondary btn-sm" onclick="loadDecisions()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="margin-right:2px"><polyline points="23 4 23 10 17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Refresh</button>',
+  overview:     '',
+  jd:           '<button class="btn btn-primary btn-sm" onclick="showModal(\'jd-modal\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="margin-right:2px"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>New JD</button>',
+  applications: '<button class="btn btn-primary btn-sm" onclick="showModal(\'resume-modal\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="margin-right:2px"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>Add Application</button>',
+  screening:    '<button class="btn btn-secondary btn-sm" onclick="loadScreening()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="margin-right:2px"><polyline points="23 4 23 10 17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Refresh</button>',
+  interview:    '<button class="btn btn-secondary btn-sm" onclick="loadInterview()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="margin-right:2px"><polyline points="23 4 23 10 17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Refresh</button>',
+  decisions:    '<button class="btn btn-secondary btn-sm" onclick="loadDecisions()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="margin-right:2px"><polyline points="23 4 23 10 17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Refresh</button>',
 };
 
 function switchTab(tab) {
@@ -85,10 +89,12 @@ function switchTab(tab) {
   document.getElementById('page-title').textContent = TAB_TITLES[tab] || tab;
   document.getElementById('topbar-actions').innerHTML = TAB_ACTIONS[tab] || '';
 
-  if (tab === 'candidates') loadCandidates();
-  if (tab === 'decisions')  loadDecisions();
-  if (tab === 'jd')         loadJDs();
-  if (tab === 'overview')   loadOverview();
+  if (tab === 'applications') loadApplications();
+  if (tab === 'screening')    loadScreening();
+  if (tab === 'interview')    loadInterview();
+  if (tab === 'decisions')    loadDecisions();
+  if (tab === 'jd')           loadJDs();
+  if (tab === 'overview')     loadOverview();
 }
 
 document.querySelectorAll('.nav-item').forEach(btn => {
@@ -223,14 +229,29 @@ async function deleteJD(id, title) {
   } catch (e) { toast('Error: ' + e.message); }
 }
 
+async function togglePublish(id, isPublished) {
+  try {
+    await api('POST', `/jd/${id}/publish`, { published: !isPublished });
+    toast(!isPublished ? 'Job published to the careers page' : 'Job unpublished');
+    loadJDs();
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
 async function deleteCandidate(id, name) {
   if (!confirm(`Delete candidate "${name}"?\n\nThis will also delete their interview sessions, evaluations, and decisions.`)) return;
   try {
     await api('DELETE', `/candidates/${id}`);
     toast('Candidate deleted');
-    loadCandidates();
+    reloadActiveCandidateTab();
     loadOverview();
   } catch (e) { toast('Error: ' + e.message); }
+}
+
+function reloadActiveCandidateTab() {
+  const activeTab = document.querySelector('.nav-item.active')?.dataset.tab;
+  if (activeTab === 'applications') loadApplications();
+  if (activeTab === 'screening')    loadScreening();
+  if (activeTab === 'interview')    loadInterview();
 }
 
 // ─── JD ───────────────────────────────────────────────────────────────────────
@@ -239,15 +260,19 @@ async function loadJDs() {
   list.innerHTML = '<p class="loading">Loading…</p>';
   try {
     const jds = await api('GET', '/jd');
-    const filter = document.getElementById('jd-filter');
+    const filters = [
+      document.getElementById('applications-jd-filter'),
+      document.getElementById('screening-jd-filter'),
+      document.getElementById('interview-jd-filter'),
+    ];
     const resumeSelect = document.getElementById('resume-jd-id');
 
-    [filter, resumeSelect].forEach(sel => {
+    [...filters, resumeSelect].forEach(sel => {
       if (!sel) return;
       const curVal = sel.value;
-      sel.innerHTML = sel === filter
-        ? '<option value="">All Job Descriptions</option>'
-        : '<option value="">Select a job description…</option>';
+      sel.innerHTML = sel === resumeSelect
+        ? '<option value="">Select a job description…</option>'
+        : '<option value="">All Job Descriptions</option>';
       jds.forEach(j => {
         const o = document.createElement('option');
         o.value = j.id; o.textContent = j.title;
@@ -286,8 +311,12 @@ async function loadJDs() {
         <span class="card-parsed ${j.parsed_json ? 'done' : 'pending'}">
           ${j.parsed_json ? '✓ Parsed' : '⏳ Parsing…'}
         </span>
+        <span class="badge ${j.is_published ? 'badge-green' : 'badge-gray'}" style="margin-left:8px">
+          ${j.is_published ? 'Published' : 'Draft'}
+        </span>
         <div class="card-actions">
           <button class="btn btn-secondary btn-sm" onclick="viewJD('${j.id}')">View</button>
+          <button class="btn ${j.is_published ? 'btn-ghost' : 'btn-success'} btn-sm" onclick="togglePublish('${j.id}', ${j.is_published ? 'true' : 'false'})">${j.is_published ? 'Unpublish' : 'Publish'}</button>
           <button class="btn btn-danger btn-sm" onclick="deleteJD('${j.id}','${esc(j.title)}')">Delete</button>
         </div>
       </div>
@@ -350,24 +379,116 @@ async function submitJD() {
   } catch (e) { toast(e.message); }
 }
 
-// ─── Candidates ───────────────────────────────────────────────────────────────
-async function loadCandidates() {
-  const jdId = document.getElementById('jd-filter').value;
-  const body = document.getElementById('candidates-body');
-  body.innerHTML = '<tr><td colspan="5" class="loading">Loading candidates…</td></tr>';
+// ─── Applications ─────────────────────────────────────────────────────────────
+const APPLICATION_STATUSES = ['pending'];
+const SCREENING_STATUSES   = ['screening', 'shortlisted', 'rejected_screening'];
+const INTERVIEW_STATUSES   = ['interview_scheduled', 'interview_in_progress', 'interview_complete', 'evaluated'];
+
+let selectedApplicationIds = new Set();
+
+async function loadApplications() {
+  const jdId = document.getElementById('applications-jd-filter').value;
+  const body = document.getElementById('applications-body');
+  body.innerHTML = '<tr><td colspan="6" class="loading">Loading applications…</td></tr>';
+  selectedApplicationIds = new Set();
+  updateSendToScreeningButton();
+  document.getElementById('applications-select-all').checked = false;
   try {
     const path = jdId ? `/candidates?jd_id=${jdId}` : '/candidates';
-    const rows = await api('GET', path);
+    const all = await api('GET', path);
+    const rows = all.filter(c => APPLICATION_STATUSES.includes(c.status));
+    if (!rows.length) {
+      body.innerHTML = `
+        <tr><td colspan="6">
+          <div class="empty-state">
+            <div class="empty-state-icon">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.75"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.75"/></svg>
+            </div>
+            <h4>No applications yet</h4>
+            <p>Candidates who apply via the public jobs page will show up here</p>
+            <button class="btn btn-primary btn-sm" style="margin-top:4px" onclick="showModal('resume-modal')">Add Application</button>
+          </div>
+        </td></tr>`;
+      return;
+    }
+    body.innerHTML = rows.map((c, i) => `
+      <tr style="animation:cardIn .35s ease both;animation-delay:${i*40}ms">
+        <td><input type="checkbox" class="application-row-check" data-id="${c.id}" onchange="toggleApplicationRow('${c.id}', this.checked)" /></td>
+        <td>
+          <div class="candidate-cell">
+            <div class="candidate-avatar">${esc(initials(c.name))}</div>
+            <div>
+              <div class="candidate-name">${esc(c.name)}</div>
+              <div class="candidate-email">${esc(c.email)}</div>
+            </div>
+          </div>
+        </td>
+        <td style="color:var(--t2);font-size:0.82rem">${c.jd_id.slice(0,8)}…</td>
+        <td style="color:var(--t2);font-size:0.82rem">${esc(c.phone || '—')}</td>
+        <td style="color:var(--t2);font-size:0.82rem">${new Date(c.created_at).toLocaleDateString()}</td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-secondary btn-sm" onclick="viewCandidate('${c.id}')">Details</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteCandidate('${c.id}','${esc(c.name)}')">Delete</button>
+          </div>
+        </td>
+      </tr>`).join('');
+  } catch (e) {
+    body.innerHTML = `<tr><td colspan="6" style="color:var(--red);padding:12px">${e.message}</td></tr>`;
+  }
+}
+
+function toggleApplicationRow(id, checked) {
+  if (checked) selectedApplicationIds.add(id);
+  else selectedApplicationIds.delete(id);
+  updateSendToScreeningButton();
+}
+
+function toggleSelectAllApplications(checkbox) {
+  document.querySelectorAll('.application-row-check').forEach(cb => {
+    cb.checked = checkbox.checked;
+    if (checkbox.checked) selectedApplicationIds.add(cb.dataset.id);
+    else selectedApplicationIds.delete(cb.dataset.id);
+  });
+  updateSendToScreeningButton();
+}
+
+function updateSendToScreeningButton() {
+  const btn = document.getElementById('send-to-screening-btn');
+  const count = document.getElementById('send-to-screening-count');
+  count.textContent = selectedApplicationIds.size;
+  btn.style.display = selectedApplicationIds.size > 0 ? 'inline-flex' : 'none';
+}
+
+async function sendToScreening() {
+  const ids = Array.from(selectedApplicationIds);
+  if (!ids.length) return;
+  try {
+    const res = await api('POST', '/candidates/screen', { candidate_ids: ids });
+    toast(res.message || 'Sent to screening');
+    loadApplications();
+    loadOverview();
+  } catch (e) { toast(e.message); }
+}
+
+// ─── Screening ────────────────────────────────────────────────────────────────
+async function loadScreening() {
+  const jdId = document.getElementById('screening-jd-filter').value;
+  const body = document.getElementById('screening-body');
+  body.innerHTML = '<tr><td colspan="5" class="loading">Loading screening results…</td></tr>';
+  try {
+    const path = jdId ? `/candidates?jd_id=${jdId}` : '/candidates';
+    const all = await api('GET', path);
+    const rows = all.filter(c => SCREENING_STATUSES.includes(c.status));
     if (!rows.length) {
       body.innerHTML = `
         <tr><td colspan="5">
           <div class="empty-state">
             <div class="empty-state-icon">
-              <svg viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.75"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.75"/></svg>
+              <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.75"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
             </div>
-            <h4>No candidates yet</h4>
-            <p>Upload a resume to screen your first candidate</p>
-            <button class="btn btn-primary btn-sm" style="margin-top:4px" onclick="showModal('resume-modal')">Upload Resume</button>
+            <h4>No candidates in screening</h4>
+            <p>Send applications to screening from the Applications tab</p>
           </div>
         </td></tr>`;
       return;
@@ -376,6 +497,9 @@ async function loadCandidates() {
       const score = c.screening_score;
       const scoreCls = score == null ? 'none' : score >= 70 ? 'high' : score >= 50 ? 'mid' : 'low';
       const scoreStr = score != null ? score.toFixed(1) : '—';
+      const inviteBtn = c.status === 'screening'
+        ? `<span class="badge badge-yellow">Screening…</span>`
+        : `<button class="btn btn-primary btn-sm" onclick="sendInterviewInvite('${c.id}')">Send Interview Invite</button>`;
       return `
         <tr style="animation:cardIn .35s ease both;animation-delay:${i*40}ms">
           <td>
@@ -393,13 +517,75 @@ async function loadCandidates() {
           <td>
             <div style="display:flex;gap:6px">
               <button class="btn btn-secondary btn-sm" onclick="viewCandidate('${c.id}')">Details</button>
-              <button class="btn btn-danger btn-sm" onclick="deleteCandidate('${c.id}','${esc(c.name)}')">Delete</button>
+              ${inviteBtn}
             </div>
           </td>
         </tr>`;
     }).join('');
   } catch (e) {
     body.innerHTML = `<tr><td colspan="5" style="color:var(--red);padding:12px">${e.message}</td></tr>`;
+  }
+}
+
+async function sendInterviewInvite(id) {
+  try {
+    const res = await api('POST', `/candidates/${id}/schedule`, {});
+    toast(res.message || 'Interview invite sent');
+    loadScreening();
+    loadInterview();
+    loadOverview();
+  } catch (e) { toast(e.message); }
+}
+
+// ─── Interview ────────────────────────────────────────────────────────────────
+async function loadInterview() {
+  const jdId = document.getElementById('interview-jd-filter').value;
+  const body = document.getElementById('interview-body');
+  body.innerHTML = '<tr><td colspan="4" class="loading">Loading interviews…</td></tr>';
+  try {
+    const path = jdId ? `/candidates?jd_id=${jdId}` : '/candidates';
+    const all = await api('GET', path);
+    const rows = all.filter(c => INTERVIEW_STATUSES.includes(c.status));
+    if (!rows.length) {
+      body.innerHTML = `
+        <tr><td colspan="4">
+          <div class="empty-state">
+            <div class="empty-state-icon">
+              <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="15" height="14" rx="2" stroke="currentColor" stroke-width="1.75"/><path d="M17 9l5-3v12l-5-3" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/></svg>
+            </div>
+            <h4>No interviews yet</h4>
+            <p>Send an interview invite from the Screening tab</p>
+          </div>
+        </td></tr>`;
+      return;
+    }
+    body.innerHTML = rows.map((c, i) => {
+      const complete = ['interview_complete', 'evaluated'].includes(c.status);
+      const stageBadge = complete
+        ? `<span class="badge badge-green">Complete</span>`
+        : `<span class="badge badge-yellow">Pending</span>`;
+      return `
+        <tr style="animation:cardIn .35s ease both;animation-delay:${i*40}ms">
+          <td>
+            <div class="candidate-cell">
+              <div class="candidate-avatar">${esc(initials(c.name))}</div>
+              <div>
+                <div class="candidate-name">${esc(c.name)}</div>
+                <div class="candidate-email">${esc(c.email)}</div>
+              </div>
+            </div>
+          </td>
+          <td style="color:var(--t2);font-size:0.82rem">${c.jd_id.slice(0,8)}…</td>
+          <td>${stageBadge}</td>
+          <td>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-secondary btn-sm" onclick="viewCandidate('${c.id}')">Details</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  } catch (e) {
+    body.innerHTML = `<tr><td colspan="4" style="color:var(--red);padding:12px">${e.message}</td></tr>`;
   }
 }
 
@@ -465,7 +651,8 @@ async function decide(decisionId, outcome) {
     await api('POST', `/decisions/${decisionId}`, { decision: outcome, notes });
     hideModal('detail-modal');
     toast(`Candidate ${outcome} — email sent`);
-    loadCandidates();
+    reloadActiveCandidateTab();
+    loadDecisions();
     loadOverview();
   } catch (e) { toast(e.message); }
 }
@@ -474,6 +661,7 @@ async function submitResume() {
   const jd_id = document.getElementById('resume-jd-id').value;
   const name = document.getElementById('resume-name').value.trim();
   const email = document.getElementById('resume-email').value.trim();
+  const phone = document.getElementById('resume-phone').value.trim();
   if (!jd_id || !name || !email) { toast('Please fill in all fields'); return; }
   try {
     if (_resumeMode === 'file') {
@@ -483,22 +671,24 @@ async function submitResume() {
       form.append('jd_id', jd_id);
       form.append('candidate_name', name);
       form.append('candidate_email', email);
+      form.append('phone', phone);
       form.append('file', file);
       const res = await fetch('/api/resume/upload', { method: 'POST', body: form });
       if (!res.ok) { const e = await res.json(); throw new Error(e.detail); }
     } else {
       const resume_text = document.getElementById('resume-text').value.trim();
       if (!resume_text) { toast('Please paste the resume text'); return; }
-      await api('POST', '/resume', { jd_id, candidate_name: name, candidate_email: email, resume_text });
+      await api('POST', '/resume', { jd_id, candidate_name: name, candidate_email: email, resume_text, phone });
     }
     hideModal('resume-modal');
     document.getElementById('resume-name').value = '';
     document.getElementById('resume-email').value = '';
+    document.getElementById('resume-phone').value = '';
     document.getElementById('resume-file').value = '';
     document.getElementById('resume-file-name').textContent = 'Drag & drop or browse';
     document.getElementById('resume-drop-zone').classList.remove('has-file');
-    toast('Resume submitted — AI screening in progress');
-    loadCandidates();
+    toast('Application added — send to screening when ready');
+    loadApplications();
     loadOverview();
   } catch (e) { toast(e.message); }
 }
@@ -619,5 +809,7 @@ loadJDs();
 setInterval(() => {
   const activeTab = document.querySelector('.nav-item.active')?.dataset.tab;
   if (activeTab === 'overview' || activeTab === 'jd') loadJDs();
-  if (activeTab === 'overview') loadOverview();
+  if (activeTab === 'overview')  loadOverview();
+  if (activeTab === 'screening') loadScreening();
+  if (activeTab === 'interview') loadInterview();
 }, 12000);
