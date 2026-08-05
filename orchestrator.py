@@ -104,6 +104,7 @@ async def schedule_interview(candidate_id: str) -> str:
             "email": candidate["email"]
         })
     except Exception as e:
+        print(f"[email_error] candidate_id={candidate_id} error={e}", flush=True)
         await audit.log_event("email_error", {"candidate_id": candidate_id, "error": str(e)})
 
     return token
@@ -225,6 +226,7 @@ async def finalize_decision(decision_id: str, admin_decision: str, notes: Option
             "outcome": admin_decision
         })
     except Exception as e:
+        print(f"[outcome_email_error] decision_id={decision_id} error={e}", flush=True)
         await audit.log_event("outcome_email_error", {
             "decision_id": decision_id,
             "error": str(e),
