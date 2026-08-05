@@ -102,12 +102,9 @@ cp .env.example .env
 GROQ_API_KEY=gsk_your_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
 
-# Email — Gmail with App Password (enable 2FA first)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your@gmail.com
-SMTP_PASSWORD=xxxx xxxx xxxx xxxx
-EMAIL_FROM=your@gmail.com
+# Email — SendGrid (verify a Single Sender at app.sendgrid.com, then create an API key)
+SENDGRID_API_KEY=SG.your_sendgrid_api_key_here
+EMAIL_FROM=your-verified-sender@example.com
 COMPANY_NAME=Your Company Name
 
 # Server
@@ -197,10 +194,7 @@ Questions are generated fresh for every candidate session using a random session
 |---|---|---|
 | `GROQ_API_KEY` | Groq API key | required |
 | `GROQ_MODEL` | LLM model name | `llama-3.3-70b-versatile` |
-| `SMTP_HOST` | SMTP server | `smtp.gmail.com` |
-| `SMTP_PORT` | SMTP port | `587` |
-| `SMTP_USER` | Email address | required |
-| `SMTP_PASSWORD` | Gmail App Password | required |
+| `SENDGRID_API_KEY` | SendGrid API key | required |
 | `EMAIL_FROM` | From address in emails | required |
 | `COMPANY_NAME` | Shown in emails | required |
 | `HOST` | Server bind address | `0.0.0.0` |

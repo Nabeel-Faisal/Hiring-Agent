@@ -12,13 +12,7 @@ services:
         value: llama-3.3-70b-versatile
       - key: ANTHROPIC_API_KEY
         sync: false
-      - key: SMTP_HOST
-        value: smtp.gmail.com
-      - key: SMTP_PORT
-        value: "587"
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASSWORD
+      - key: SENDGRID_API_KEY
         sync: false
       - key: EMAIL_FROM
         sync: false

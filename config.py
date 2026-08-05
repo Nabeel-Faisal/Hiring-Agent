@@ -15,12 +15,9 @@ MODEL_GROQ: str = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
 DB_PATH: str = os.environ.get("DB_PATH", "interview_system.db")
 AUDIT_LOG_PATH: str = os.environ.get("AUDIT_LOG_PATH", "audit.jsonl")
 
-# Email (SMTP)
-SMTP_HOST: str = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT: int = int(os.environ.get("SMTP_PORT", "587"))
-SMTP_USER: str = os.environ.get("SMTP_USER", "")
-SMTP_PASSWORD: str = os.environ.get("SMTP_PASSWORD", "")
-EMAIL_FROM: str = os.environ.get("EMAIL_FROM", SMTP_USER)
+# Email (SendGrid HTTPS API — SMTP ports are blocked on Render's free tier)
+SENDGRID_API_KEY: str = os.environ.get("SENDGRID_API_KEY", "")
+EMAIL_FROM: str = os.environ.get("EMAIL_FROM", "")
 COMPANY_NAME: str = os.environ.get("COMPANY_NAME", "HiringCo")
 
 # Server

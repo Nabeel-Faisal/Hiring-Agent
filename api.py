@@ -282,8 +282,8 @@ async def admin_decide(decision_id: str, body: AdminDecisionRequest):
         await orchestrator.finalize_decision(decision_id, body.decision, body.notes)
     except ValueError as e:
         raise HTTPException(404, str(e))
-    from config import SMTP_USER
-    email_note = "" if SMTP_USER and SMTP_USER != "your@gmail.com" else " (Email not sent — configure SMTP in .env)"
+    from config import SENDGRID_API_KEY
+    email_note = "" if SENDGRID_API_KEY else " (Email not sent — configure SENDGRID_API_KEY in .env)"
     return {"message": f"Decision recorded{email_note}"}
 
 

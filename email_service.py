@@ -1,49 +1,25 @@
-import smtplib
-import socket
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from config import SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, EMAIL_FROM, COMPANY_NAME, BASE_URL
+import httpx
+from config import SENDGRID_API_KEY, EMAIL_FROM, COMPANY_NAME, BASE_URL
 
 
 # ─── Email wrapper ────────────────────────────────────────────────────────────
-
-def _build_message(to_email: str, subject: str, html_body: str) -> MIMEMultipart:
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = f"{COMPANY_NAME} <{EMAIL_FROM}>"
-    msg["To"] = to_email
-    msg.attach(MIMEText(html_body, "html"))
-    return msg
-
-
-class _IPv4SMTP(smtplib.SMTP):
-    """Render's network has no IPv6 route, so smtp.gmail.com's AAAA record
-    connects with ENETUNREACH. Force the socket to IPv4 explicitly."""
-
-    def _get_socket(self, host, port, timeout):
-        last_err = None
-        for family, socktype, proto, _, sockaddr in socket.getaddrinfo(
-            host, port, socket.AF_INET, socket.SOCK_STREAM
-        ):
-            sock = socket.socket(family, socktype, proto)
-            try:
-                if timeout is not None:
-                    sock.settimeout(timeout)
-                sock.connect(sockaddr)
-                return sock
-            except OSError as e:
-                last_err = e
-                sock.close()
-        raise OSError(f"Could not connect to {host}:{port} over IPv4: {last_err!r}")
-
+# Sent via SendGrid's HTTPS API (port 443) — Render's free tier blocks
+# outbound SMTP ports (25/465/587) entirely, so raw smtplib can never connect.
 
 def _send(to_email: str, subject: str, html_body: str) -> None:
-    msg = _build_message(to_email, subject, html_body)
-    with _IPv4SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
-        server.ehlo()
-        server.starttls()
-        server.login(SMTP_USER, SMTP_PASSWORD)
-        server.sendmail(EMAIL_FROM, [to_email], msg.as_string())
+    payload = {
+        "personalizations": [{"to": [{"email": to_email}]}],
+        "from": {"email": EMAIL_FROM, "name": COMPANY_NAME},
+        "subject": subject,
+        "content": [{"type": "text/html", "value": html_body}],
+    }
+    resp = httpx.post(
+        "https://api.sendgrid.com/v3/mail/send",
+        headers={"Authorization": f"Bearer {SENDGRID_API_KEY}"},
+        json=payload,
+        timeout=15,
+    )
+    resp.raise_for_status()
 
 
 # ─── Shared layout helpers ────────────────────────────────────────────────────
