@@ -97,7 +97,7 @@ async def schedule_interview(candidate_id: str) -> str:
 
     # Send invitation email
     try:
-        email_service.send_interview_invitation(candidate["name"], candidate["email"], token)
+        await asyncio.to_thread(email_service.send_interview_invitation, candidate["name"], candidate["email"], token)
         await audit.log_event("interview_invitation_sent", {
             "candidate_id": candidate_id,
             "session_id": session_id,
@@ -216,9 +216,9 @@ async def finalize_decision(decision_id: str, admin_decision: str, notes: Option
     # Attempt to send email — log failure but never crash the endpoint
     try:
         if admin_decision == "selected":
-            email_service.send_selection_email(candidate["name"], candidate["email"], jd_title)
+            await asyncio.to_thread(email_service.send_selection_email, candidate["name"], candidate["email"], jd_title)
         else:
-            email_service.send_rejection_email(candidate["name"], candidate["email"], jd_title)
+            await asyncio.to_thread(email_service.send_rejection_email, candidate["name"], candidate["email"], jd_title)
         await db.mark_email_sent(decision_id)
         await audit.log_event("outcome_email_sent", {
             "decision_id": decision_id,

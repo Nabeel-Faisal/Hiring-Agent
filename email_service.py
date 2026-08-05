@@ -17,7 +17,7 @@ def _build_message(to_email: str, subject: str, html_body: str) -> MIMEMultipart
 
 def _send(to_email: str, subject: str, html_body: str) -> None:
     msg = _build_message(to_email, subject, html_body)
-    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+    with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
         server.ehlo()
         server.starttls()
         server.login(SMTP_USER, SMTP_PASSWORD)
