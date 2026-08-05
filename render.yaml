@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: hiring-agent
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: COMPANY_NAME
+        value: HiringCo
+      - key: SCREENING_PASS_SCORE
+        value: "60.0"
+      - key: INTERVIEW_DURATION_SECONDS
+        value: "600"
+      - key: TOTAL_QUESTIONS
+        value: "5"
+      - key: ANSWER_TIMEOUT_SECONDS
+        value: "120"
