@@ -1,4 +1,5 @@
 import smtplib
+import socket
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from config import SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, EMAIL_FROM, COMPANY_NAME, BASE_URL
@@ -15,9 +16,28 @@ def _build_message(to_email: str, subject: str, html_body: str) -> MIMEMultipart
     return msg
 
 
+class _IPv4SMTP(smtplib.SMTP):
+    """Render's network has no IPv6 route, so smtp.gmail.com's AAAA record
+    connects with ENETUNREACH. Force the socket to IPv4 explicitly."""
+
+    def _get_socket(self, host, port, timeout):
+        for family, socktype, proto, _, sockaddr in socket.getaddrinfo(
+            host, port, socket.AF_INET, socket.SOCK_STREAM
+        ):
+            sock = socket.socket(family, socktype, proto)
+            try:
+                if timeout is not None:
+                    sock.settimeout(timeout)
+                sock.connect(sockaddr)
+                return sock
+            except OSError:
+                sock.close()
+        raise OSError(f"Could not connect to {host}:{port} over IPv4")
+
+
 def _send(to_email: str, subject: str, html_body: str) -> None:
     msg = _build_message(to_email, subject, html_body)
-    with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+    with _IPv4SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
         server.ehlo()
         server.starttls()
         server.login(SMTP_USER, SMTP_PASSWORD)
