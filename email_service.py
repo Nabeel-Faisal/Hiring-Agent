@@ -21,6 +21,7 @@ class _IPv4SMTP(smtplib.SMTP):
     connects with ENETUNREACH. Force the socket to IPv4 explicitly."""
 
     def _get_socket(self, host, port, timeout):
+        last_err = None
         for family, socktype, proto, _, sockaddr in socket.getaddrinfo(
             host, port, socket.AF_INET, socket.SOCK_STREAM
         ):
@@ -30,9 +31,10 @@ class _IPv4SMTP(smtplib.SMTP):
                     sock.settimeout(timeout)
                 sock.connect(sockaddr)
                 return sock
-            except OSError:
+            except OSError as e:
+                last_err = e
                 sock.close()
-        raise OSError(f"Could not connect to {host}:{port} over IPv4")
+        raise OSError(f"Could not connect to {host}:{port} over IPv4: {last_err!r}")
 
 
 def _send(to_email: str, subject: str, html_body: str) -> None:
