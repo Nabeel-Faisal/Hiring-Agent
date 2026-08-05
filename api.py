@@ -180,6 +180,7 @@ async def _bg_screen(candidate_id: str):
         await orchestrator.process_candidate_screening(candidate_id)
     except Exception as e:
         import audit
+        await db.update_candidate_status(candidate_id, "pending")
         await audit.log_event("screening_error", {"candidate_id": candidate_id, "error": str(e)})
 
 
