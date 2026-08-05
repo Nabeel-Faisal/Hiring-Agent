@@ -23,7 +23,11 @@ COMPANY_NAME: str = os.environ.get("COMPANY_NAME", "HiringCo")
 # Server
 HOST: str = os.environ.get("HOST", "0.0.0.0")
 PORT: int = int(os.environ.get("PORT", "8000"))
-BASE_URL: str = os.environ.get("BASE_URL", f"http://localhost:{PORT}")
+BASE_URL: str = (
+    os.environ.get("BASE_URL")
+    or os.environ.get("RENDER_EXTERNAL_URL")
+    or f"http://localhost:{PORT}"
+)
 
 # Screening thresholds
 SCREENING_PASS_SCORE: float = float(os.environ.get("SCREENING_PASS_SCORE", "60.0"))
